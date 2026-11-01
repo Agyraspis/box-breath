@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0d0f12" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Box Breath" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="Box breathing with a beep at every phase change and a binaural beat underneath. Use headphones." />
+    <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <title>Box Breath</title>
+  </head>
+  <body>
+    <main class="app">
+      <section id="setup" class="view setup" aria-label="Setup">
+        <div class="setup-fields">
+          <div class="field">
+            <span class="field-label" id="tod-label">Time of day</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="tod-label" id="tod">
+              <button type="button" role="radio" aria-checked="false" data-value="morning">Morning</button>
+              <button type="button" role="radio" aria-checked="false" data-value="evening">Evening</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="field-label" id="phase-label">Phase length</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="phase-label" id="phase">
+              <button type="button" role="radio" aria-checked="false" data-value="3">3s</button>
+              <button type="button" role="radio" aria-checked="false" data-value="4">4s</button>
+              <button type="button" role="radio" aria-checked="false" data-value="5">5s</button>
+            </div>
+            <p class="hint" id="round-length">1 round = 16 s</p>
+          </div>
+
+          <div class="field">
+            <span class="field-label" id="rounds-label">Rounds</span>
+            <div class="stepper" role="group" aria-labelledby="rounds-label">
+              <button type="button" id="rounds-minus" aria-label="Fewer rounds">−</button>
+              <output id="rounds-value" aria-live="polite">10</output>
+              <button type="button" id="rounds-plus" aria-label="More rounds">+</button>
+            </div>
+            <p class="hint" id="total-time">10 rounds · 2:40</p>
+            <div class="presets" id="presets"><!-- one button per PRESET_MINUTES entry --></div>
+          </div>
+
+          <div class="field">
+            <span class="field-label">Volume</span>
+            <label class="slider">
+              <span class="slider-row"><span>Binaural level</span><output id="binaural-value">25%</output></span>
+              <input type="range" id="binaural" min="0" max="100" step="1" value="25" />
+            </label>
+            <label class="slider">
+              <span class="slider-row"><span>Beep level</span><output id="beep-value">60%</output></span>
+              <input type="range" id="beep" min="0" max="100" step="1" value="60" />
+            </label>
+          </div>
+
+          <p class="reminder">Use headphones.</p>
+        </div>
+
+        <button type="button" id="start" class="start">Start</button>
+      </section>
+
+      <section id="session" class="view session" aria-label="Session" hidden>
+        <div class="stage">
+          <svg class="box" viewBox="0 0 100 100" aria-hidden="true">
+            <rect class="box-outline" x="6" y="6" width="88" height="88" rx="1.5" />
+            <circle class="box-dot" id="box-dot" cx="6" cy="94" r="2.4" />
+          </svg>
+          <div class="readout">
+            <div class="phase" id="phase-name" aria-live="polite">Settle in</div>
+            <div class="count" id="countdown">6</div>
+          </div>
+        </div>
+        <p class="progress" id="progress">Round 1 of 10 · 2:40 left</p>
+        <div class="controls">
+          <button type="button" id="pause" class="control">Pause</button>
+          <button type="button" id="stop" class="control">Stop</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
