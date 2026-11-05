@@ -111,6 +111,9 @@ These are implementation choices, not spec changes. Each is easy to adjust.
 | Beep scheduling | The spec's lookahead scheduler: a 250 ms timer keeps the next 2 s of beeps scheduled, and each beep starts at its exact audio-clock time. The spec also allows scheduling every beep at Start for sessions under ~20 min, but a 20:00 session at 3 s has 401 beeps, and the audio thread processes every waiting beep on every audio block. Rendering showed about 9× the work of the lookahead. |
 | Time of day | Until you pick one, the default (Morning before 2 pm) is re-checked each time Setup is shown. A manual pick is saved and always wins. |
 | Between sessions | The AudioContext is suspended once everything is silent, and the next Start resumes it. |
+| Audio buffer | The AudioContext asks for the large "playback" buffer instead of the lowest-latency one, so a busy moment on the phone can't cause dropouts (heard as crackle or a burst of noise). Every beep and ramp is scheduled ahead, so this costs nothing in timing. |
+| Screen timing | The countdown, label and dot follow the moment the sound reaches your ears (the audio clock corrected for output and Bluetooth delay with `getOutputTimestamp`), so they turn over with the beep you hear. |
+| Moving dot | Its own GPU layer, moved with `transform` only: no repaint or blur filter per frame, so drawing the screen never competes with the audio. |
 
 ## Code layout
 

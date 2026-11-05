@@ -34,7 +34,7 @@ function start(): void {
 
 /** Draw the session screen from the audio clock. The UI reads the clock; it never owns it. */
 function render(p: SessionPlayer): { t: number; done: boolean } {
-  const t = p.time();
+  const t = p.time(engine.heardTime());
   const view = viewAt(t, p.plan.phaseSeconds, p.plan.rounds);
   sessionScreen.render(view, p.paused);
   return { t, done: view.stage === 'done' };

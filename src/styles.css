@@ -258,9 +258,20 @@ input[type='range'] {
   stroke-width: 1.1;
 }
 
+/* The dot is its own GPU layer, moved with transform only: no repaint and no blur
+   filter per frame, so the screen never competes with the audio for the CPU. */
 .box-dot {
-  fill: var(--accent);
-  filter: drop-shadow(0 0 2.5px rgba(140, 199, 185, 0.55));
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4.8%;
+  height: 4.8%;
+  margin: -2.4% 0 0 -2.4%;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px 1px rgba(140, 199, 185, 0.5);
+  will-change: transform;
+  pointer-events: none;
 }
 
 .readout {

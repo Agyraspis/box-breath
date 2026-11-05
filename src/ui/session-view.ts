@@ -2,7 +2,7 @@ import { formatClock, type SessionView } from '../session';
 import { byId, setText } from './dom';
 
 /**
- * Corners of the box in the SVG's 0–100 space. The dot climbs the left side on
+ * Corners of the box in the stage's 0–100 space (the SVG viewBox). The dot climbs the left side on
  * Inhale, crosses the top on Hold, descends the right side on Exhale and
  * returns along the bottom on the second Hold.
  */
@@ -21,10 +21,19 @@ export class SessionScreen {
   private readonly phase = byId('phase-name');
   private readonly countdown = byId('countdown');
   private readonly progress = byId('progress');
-  private readonly dot = byId<SVGCircleElement>('box-dot');
+  private readonly stage = byId('stage');
+  private readonly dot = byId('box-dot');
+  /** Stage width in CSS pixels; the stage is square. */
+  private size = 0;
+  private dotTransform = '';
+
+  constructor() {
+    new ResizeObserver(() => this.measure()).observe(this.stage);
+  }
 
   show(): void {
     this.root.hidden = false;
+    this.measure();
   }
 
   hide(): void {
@@ -42,8 +51,17 @@ export class SessionScreen {
     this.pauseButton.disabled = done;
 
     const [x, y] = this.dotPosition(view);
-    this.dot.setAttribute('cx', x.toFixed(2));
-    this.dot.setAttribute('cy', y.toFixed(2));
+    const px = this.size / 100;
+    const transform = `translate3d(${(x * px).toFixed(1)}px, ${(y * px).toFixed(1)}px, 0)`;
+    if (transform !== this.dotTransform) {
+      this.dot.style.transform = transform;
+      this.dotTransform = transform;
+    }
+  }
+
+  private measure(): void {
+    this.size = this.stage.clientWidth;
+    this.dotTransform = '';
   }
 
   private dotPosition(view: SessionView): readonly [number, number] {

@@ -66,6 +66,8 @@ const LEAD_SECONDS = 0.05;
 const CANCEL_MARGIN_SECONDS = 0.02;
 /** Oscillators stop this long after their gain has reached zero. */
 const STOP_PAD_SECONDS = 0.05;
+/** A reported output latency beyond this is treated as bogus (Bluetooth is typically 0.1–0.3 s). */
+const MAX_OUTPUT_LATENCY_SECONDS = 1;
 
 export interface SessionPlan {
   preset: BinauralPreset;
@@ -255,11 +257,13 @@ export class SessionPlayer {
     return this.pausedT !== null;
   }
 
-
-  /** Session-clock time now. */
-  time(): number {
+  /**
+   * Session-clock time at audio-clock time `now` (by default the audio clock
+   * itself; the screen passes AudioEngine.heardTime() instead).
+   */
+  time(now: number = this.ctx.currentTime): number {
     if (this.pausedT !== null) return this.pausedT;
-    return Math.max(this.anchorT, this.anchorT + (this.ctx.currentTime - this.anchorCtx));
+    return Math.max(this.anchorT, this.anchorT + (now - this.anchorCtx));
   }
 
   /** Audio-clock time at which session time t happens (while running). */
@@ -468,6 +472,23 @@ export class AudioEngine {
     return this.ctx?.state ?? 'closed';
   }
 
+  /**
+   * Audio-clock time of the sound reaching your ears right now: corrected for
+   * the output delay (the 'playback' buffer, Bluetooth) and smooth between audio
+   * callbacks, so the countdown turns over when you hear the beep. Never ahead of
+   * currentTime; falls back to it where the browser reports no timestamp.
+   */
+  heardTime(): number {
+    const ctx = this.ctx;
+    if (!ctx) return 0;
+    const now = ctx.currentTime;
+    if (ctx.state !== 'running' || typeof ctx.getOutputTimestamp !== 'function') return now;
+    const { contextTime, performanceTime } = ctx.getOutputTimestamp();
+    if (!contextTime || !performanceTime) return now;
+    const heard = contextTime + (performance.now() - performanceTime) / 1000;
+    return Math.min(now, Math.max(now - MAX_OUTPUT_LATENCY_SECONDS, heard));
+  }
+
   startSession(plan: SessionPlan): SessionPlayer {
     const ctx = this.context();
     const player = new SessionPlayer(ctx, this.master as GainNode, plan);
@@ -483,7 +504,16 @@ export class AudioEngine {
   private context(): AudioContext {
     if (this.ctx) return this.ctx;
     preferPlaybackAudioSession();
-    const ctx = new AudioContext();
+    // A large output buffer instead of the default lowest-latency one: if the
+    // phone is briefly busy, the audio still has data to play, rather than
+    // dropping out (heard as crackle or a burst of noise). Nothing here needs low
+    // latency, since every beep and ramp is scheduled ahead on the audio clock.
+    let ctx: AudioContext;
+    try {
+      ctx = new AudioContext({ latencyHint: 'playback' });
+    } catch {
+      ctx = new AudioContext();
+    }
     const master = ctx.createGain();
     master.gain.value = 1;
     master.connect(ctx.destination);
