@@ -113,6 +113,7 @@ These are implementation choices, not spec changes. Each is easy to adjust.
 | Between sessions | The AudioContext is suspended once everything is silent, and the next Start resumes it. |
 | Audio buffer | The AudioContext asks for the large "playback" buffer instead of the lowest-latency one, so a busy moment on the phone can't cause dropouts (heard as crackle or a burst of noise). Every beep and ramp is scheduled ahead, so this costs nothing in timing. |
 | Screen timing | The countdown, label and dot follow the moment the sound reaches your ears (the audio clock corrected for output and Bluetooth delay with `getOutputTimestamp`), so they turn over with the beep you hear. |
+| Beep start | Each pip rises over 15 ms along a smooth curve instead of the spec's 5 ms straight ramp. Bluetooth AAC smeared the sharper edge into a burst of noise; measured through the codec, the smoother rise brings that burst 13–28 dB down. |
 | Moving dot | Its own GPU layer, moved with `transform` only: no repaint or blur filter per frame, so drawing the screen never competes with the audio. |
 
 ## Code layout

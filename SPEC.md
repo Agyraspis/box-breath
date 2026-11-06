@@ -123,7 +123,7 @@ Two pure sine oscillators, one hard-panned to each ear. Left = carrier − beat/
 
 ### Transition beep
 
-- Each beep is one or two sine pips, 140 ms each. Envelope per pip: 5 ms linear attack, then exponential decay to near silence. *(Changed Nov 1, 2026, so you can find your place again if you lose track.)*
+- Each beep is one or two sine pips, 140 ms each. Envelope per pip: a 15 ms smooth (raised-cosine) rise, then exponential decay to near silence. *(Rise changed Nov 6, 2026 from a 5 ms linear attack, which Bluetooth AAC turned into audible bursts of noise.)* *(Changed Nov 1, 2026, so you can find your place again if you lose track.)*
 
   | Phase starting | Beep |
   | --- | --- |

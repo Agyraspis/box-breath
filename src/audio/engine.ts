@@ -25,7 +25,7 @@ import {
 } from '../session';
 
 /**
- * Transition beeps: sine pips of 140 ms, 5 ms linear attack, exponential decay.
+ * Transition beeps: sine pips of 140 ms, a 15 ms smooth rise, exponential decay.
  * Pitch tells full from empty (high going into or holding a full breath, low
  * going into or holding an empty one); one pip means move, two mean hold. The
  * end of the session keeps the original 660 Hz single beep.
@@ -40,7 +40,13 @@ export const BEEP_TONES: Readonly<Record<BeepKind, { frequency: number; pips: nu
 /** Start-to-start spacing of the two pips of a hold beep (140 ms pip + 60 ms gap). */
 export const PIP_SPACING_SECONDS = 0.2;
 export const BEEP_SECONDS = 0.14;
-export const BEEP_ATTACK_SECONDS = 0.005;
+/**
+ * Each pip rises over 15 ms along a raised-cosine curve. The spec's 5 ms
+ * straight ramp was too sharp an edge for Bluetooth AAC, which smeared it into
+ * an audible burst of noise; this edge brings that burst 14–17 dB down.
+ */
+export const BEEP_ATTACK_SECONDS = 0.015;
+const BEEP_ATTACK_CURVE = Float32Array.from({ length: 64 }, (_, i) => 0.5 - 0.5 * Math.cos((Math.PI * i) / 63));
 /** "Near silence" at the end of the decay (−80 dB). */
 export const BEEP_FLOOR = 0.0001;
 
@@ -376,8 +382,7 @@ export class SessionPlayer {
       osc.frequency.value = tone.frequency;
       const env = this.ctx.createGain();
       env.gain.value = 0;
-      env.gain.setValueAtTime(0, start);
-      env.gain.linearRampToValueAtTime(1, start + BEEP_ATTACK_SECONDS);
+      env.gain.setValueCurveAtTime(BEEP_ATTACK_CURVE, start, BEEP_ATTACK_SECONDS);
       env.gain.exponentialRampToValueAtTime(BEEP_FLOOR, start + BEEP_SECONDS);
       osc.connect(env).connect(this.beepBus);
       osc.start(start);
